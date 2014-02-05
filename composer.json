@@ -1,0 +1,14 @@
+{
+    "name": "kbiela/s",
+    "authors": [
+        {
+            "name": "Kamil Biela",
+            "email": "kamil.biela@gmail.com"
+        }
+    ],
+    "require": {
+        "silex/silex": "~1.1",
+        "mnapoli/php-di": "~4.0",
+	"doctrine/orm": "2.3.4"
+    }
+}
