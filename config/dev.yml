@@ -1,0 +1,12 @@
+config:
+    database:
+        driver: pdo_mysql
+        user:   root
+        password: ~
+        dbname: shop
+        host: 127.0.0.1
+
+    timezone: 'UTC'
+    disable_exception_handler: false
+debug: true
+
