@@ -39,6 +39,7 @@ class ProductControllerTest extends ShopWebTestCase
             'name'        => $name,
             'description' => 'product description',
             'price'       => 123.12,
+            'category_id' => $this->getEm()->getRepository('Shop\Model\CategoryLang')->findOneBy(['name' => 'Sub Category 1'])->getCategory()->getId()
         ];
 
         $client = $this->createClient();
@@ -63,14 +64,26 @@ class ProductControllerTest extends ShopWebTestCase
         $client->request('POST', "/product", []);
     }
 
-    public function testUpdateProductDescription()
+    public function testDeleteProduct()
+    {
+        $uid = 'uid-history';
+
+        $client = $this->createClient();
+        $client->request('DELETE', "/product/$uid");
+
+        $this->assertNull($this->getEm()->getRepository('Shop\Model\Product')->findCurrentOne($uid));
+    }
+
+    public function testUpdateProduct()
     {
         $name = "new product name " . md5(rand());
         $uid = 'uid-1';
+        $price = 123.123;
 
         $data = [
             'name'        => $name,
-            'description' => 'product description'
+            'description' => 'product description',
+            'price'       => $price
         ];
 
         $client = $this->createClient();
@@ -78,11 +91,14 @@ class ProductControllerTest extends ShopWebTestCase
 
         $this->assertTrue($client->getResponse()->isOk());
 
-        /* @var $p ProductLang */
+        /* @var $productLang ProductLang */
         $productLang = $this->getEm()->getRepository('Shop\Model\ProductLang')->findOneBy(['productUid' => $uid]);
         $this->assertEquals($name, $productLang->getName(), 'ProductLang name must be updated');
 
-//        $this->assertEquals(2, $this->getEm()->getRepository('Shop\Model'))
+        /* @var $product \Shop\Model\Product */
+        $product = $this->getEm()->getRepository('Shop\Model\Product')->findCurrentOne($uid);
+        $this->assertEquals($price, $product->getPrice(), 'Product price must be updated');
 
+        $this->assertCount(2, $this->getEm()->getRepository('Shop\Model\Product')->findBy(array('uid' => $uid)));
     }
 }

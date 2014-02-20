@@ -37,5 +37,6 @@ $app->get('/product/{uid}', "controller.product:getOneAction");
 $app->get('/product', 'controller.product:getAction');
 $app->post('/product', 'controller.product:addAction');
 $app->put('/product/{uid}', 'controller.product:updateAction');
+$app->delete('/product/{uid}', 'controller.product:deleteAction');
 
 return $app;

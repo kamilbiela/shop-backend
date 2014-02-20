@@ -6,9 +6,16 @@ use Shop\Model\Product;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\Common\DataFixtures\FixtureInterface;
 use Shop\Model\ProductLang;
+use Doctrine\Common\DataFixtures\AbstractFixture;
+use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 
-class LoadProductFixture implements FixtureInterface
+class LoadProductFixture extends AbstractFixture implements DependentFixtureInterface
 {
+    public function getDependencies()
+    {
+        return array('Shop\Fixture\LoadCategoryFixture');
+    }
+
     public function load(ObjectManager $manager)
     {
         // generate few products
@@ -23,21 +30,22 @@ class LoadProductFixture implements FixtureInterface
             $productLang = $this->generateProductLang($product);
             $manager->persist($productLang);
         }
-//
-//        // generate one peoduct with many versions
-//        $date = new \DateTime('2014-01-01 00:00:01');
-//        $product = $this->generateProduct('uid-history');
-//        $manager->persist($product, $date);
-//        $productLang = $this->generateProductLang($product);
-//        $manager->persist($productLang);
-//
-//        for ($i=0; $i < 5; $i++)
-//        {
-//            $date->add(new \DateInterval('PT1H'));
-//            $manager->persist($this->generateProduct($product->getUid(), clone $date));
-//        }
-//
-//        $manager->flush();
+
+        // generate one product with many versions
+        $date = new \DateTime('2014-01-01 00:00:01');
+        $product = $this->generateProduct('uid-history');
+        $manager->persist($product, $date);
+
+        $manager->persist($this->generateProductLang($product));
+        $manager->flush();
+        for ($i=0; $i < 5; $i++)
+        {
+            $date->add(new \DateInterval('PT1H'));
+            $manager->persist($this->generateProduct($product->getUid(), clone $date));
+            $manager->flush();
+        }
+
+        $manager->flush();
     }
 
     /**
@@ -56,6 +64,7 @@ class LoadProductFixture implements FixtureInterface
 
         $product->setVersion($date);
         $product->setPrice(100);
+        $product->setIsCurrent(true);
 
         return $product;
     }

@@ -17,6 +17,11 @@ class ProductController
      */
     protected $em;
 
+    /**
+     * @var \Shop\Lib\Serializer\CollectionSerializerInterface
+     */
+    protected $serializer;
+
     public function __construct(EntityManager $em, CollectionSerializerInterface $serializer)
     {
         $this->em = $em;
@@ -48,11 +53,31 @@ class ProductController
         $product->setIsCurrent(true);
         $this->em->persist($product);
 
-        $response = $this->addOrUpdate($request, $product);
+        $this->addOrUpdate($request, $product);
 
         $this->em->flush();
 
-        return $response;
+        return new JsonResponse(array('message' => 'ok'));
+    }
+
+    public function deleteAction($uid)
+    {
+        /* @var $product Product */
+        $product = $this->em->getRepository('Shop\Model\Product')->findCurrentOne($uid);
+
+        if (!$product) {
+            throw new NotFoundHttpException('Product does not exists');
+        }
+
+        //
+        // @todo - after there is cart and order functionality, delete all non-related product data.
+        //
+
+        $product->setIsCurrent(false);
+        $this->em->persist($product);
+        $this->em->flush();
+
+        return new JsonResponse(array('message' => 'ok'));
     }
 
     public function updateAction($uid, Request $request)
@@ -63,36 +88,49 @@ class ProductController
             throw new NotFoundHttpException('Product does not exists');
         }
 
-        $productUpdate = clone $product;
-        $productUpdate->setIsCurrent(true);
-        $this->em->persist($productUpdate);
+        $productClone = clone $product;
+        $productClone->setIsCurrent(true);
 
-        $response = $this->addOrUpdate($request, $productUpdate);
+        $this->em->persist($productClone);
+
+        $this->addOrUpdate($request, $productClone);
 
         $this->em->flush();
 
-        return $response;
+        return new JsonResponse(array('message' => 'ok'));
     }
 
     protected function addOrUpdate(Request $request, Product $product)
     {
         if ($product->getId()) {
-            $pData = $this->em->getRepository('Shop\Model\ProductLang')->findOneBy(['productUid' => $product->getUid()]);
+            $productLang = $this->em->getRepository('Shop\Model\ProductLang')->findOneBy(['productUid' => $product->getUid()]);
 
-            if (!$pData) {
+            if (!$productLang) {
                 throw new NotFoundHttpException('Product Data does not exists');
             }
         } else {
-            $pData = new ProductLang();
+            $productLang = new ProductLang();
         }
 
-        $pData->setName($request->get('name'));
-        $pData->setDescription($request->get('description'));
-        $pData->setProductUid($product->getUid());
-        $this->em->persist($pData);
+        if ($v = $request->get('price')) {
+            $product->setPrice($v);
+        }
 
+        if ($v = $request->get('name')) {
+            $productLang->setName($v);
+        }
+
+        if ($v = $request->get('description')) {
+            $productLang->setDescription($v);
+        }
+
+        if ($v = $request->get('category_id')) {
+            $product->setCategory($this->em->getReference('Shop\Model\Category', $v));
+        }
+
+        $productLang->setProductUid($product->getUid());
+
+        $this->em->persist($productLang);
         $this->em->flush();
-
-        return new JsonResponse(array('message' => 'ok'));
     }
 }

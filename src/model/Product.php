@@ -8,7 +8,7 @@ use Shop\Lib\Serializer\ArraySerializableInterface;
  * @Entity(repositoryClass="Shop\Repository\ProductRepository")
  * @Table(uniqueConstraints={@UniqueConstraint(name="uid_version_idx", columns={"uid", "version"})}, indexes={@Index(name="is_current_idx", columns={"isCurrent"})})
  * @EntityListeners({"Shop\Model\Listener\ProductListener"})
-  * @HasLifecycleCallbacks
+ * @HasLifecycleCallbacks
  */
 class Product implements ArraySerializableInterface
 {
@@ -48,6 +48,11 @@ class Product implements ArraySerializableInterface
      * @var float
      */
     protected $price = 0;
+
+    /**
+     * @ManyToOne(targetEntity="Category", inversedBy="products")
+     */
+    protected $category;
 
     /**
      * @param integer $id
@@ -138,6 +143,22 @@ class Product implements ArraySerializableInterface
             'version' => $this->getVersion(),
             'price' => $this->getPrice()
         );
+    }
+
+    /**
+     * @param Category $category
+     */
+    public function setCategory($category)
+    {
+        $this->category = $category;
+    }
+
+    /**
+     * @return Category
+     */
+    public function getCategory()
+    {
+        return $this->category;
     }
 
     /**
