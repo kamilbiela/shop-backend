@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
-class ProductController
+class CategoryController
 {
     /**
      * @var \Doctrine\ORM\EntityManager
@@ -28,5 +28,22 @@ class ProductController
         $this->serializer = $serializer;
     }
 
-    public function
+    public function getOneAction($id)
+    {
+        /* @var $category \Shop\Model\Category */
+        $category = $this->em->getRepository('Shop\Model\Category')->findOneBy(array('id' => $id));
+
+        if (!$category) {
+            throw new NotFoundHttpException('Category does not exists');
+        }
+
+        return new JsonResponse($category->serializeToArray('user'));
+    }
+
+    public function getAction()
+    {
+        $categories = $this->em->getRepository('Shop\Model\Category')->findAll();
+
+        return new JsonResponse($this->serializer->serialize($categories, 'user'));
+    }
 }

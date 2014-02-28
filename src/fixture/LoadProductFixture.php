@@ -30,19 +30,17 @@ class LoadProductFixture extends AbstractFixture implements DependentFixtureInte
             $productLang = $this->generateProductLang($product);
             $manager->persist($productLang);
         }
-
+echo PHP_EOL,PHP_EOL;
         // generate one product with many versions
         $date = new \DateTime('2014-01-01 00:00:01');
         $product = $this->generateProduct('uid-history');
         $manager->persist($product, $date);
 
         $manager->persist($this->generateProductLang($product));
-        $manager->flush();
         for ($i=0; $i < 5; $i++)
         {
             $date->add(new \DateInterval('PT1H'));
             $manager->persist($this->generateProduct($product->getUid(), clone $date));
-            $manager->flush();
         }
 
         $manager->flush();

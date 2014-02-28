@@ -10,28 +10,24 @@ class ProductListener
     /**
      * If given new entity has
      *
+     * @PostPersist
+     *
      * @param Product $product
      * @param LifecycleEventArgs $event
      */
-    public function prePersist(Product $product, LifecycleEventArgs $event)
+    public function enforceOnlyOneCurrentEntity(Product $product, LifecycleEventArgs $event)
     {
-        if (!$event->getEntity()->getIsCurrent()) {
+        if (!$product->getIsCurrent()) {
             return;
         }
 
         $em = $event->getEntityManager();
 
-        // this should always be just one product
-        $products = $em->getRepository('Shop\Model\Product')->findBy(array(
-            'uid' => $product->getUid(),
-            'isCurrent' => true
-        ));
-
-        foreach ($products as $product) {
-            $product->setIsCurrent(false);
-            $em->persist($product);
-        }
-
-        $em->flush();
+        // @todo find a better way of doing this
+        $query = $em->createQuery('UPDATE Shop\Model\Product p SET p.isCurrent = :isCurrent WHERE p.uid = :uid AND p.id < :id');
+        $query->setParameter('uid', $product->getUid());
+        $query->setParameter('isCurrent', false);
+        $query->setParameter('id', $product->getId());
+        $query->getResult();
     }
 }
